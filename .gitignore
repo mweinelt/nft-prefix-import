@@ -1,0 +1,12 @@
+# python
+__pycache__/
+*.py[oc]
+build/
+dist/
+.venv
+
+# nix
+.direnv/
+.pre-commit*
+result
+result-*
