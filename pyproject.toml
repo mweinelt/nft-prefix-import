@@ -1,0 +1,31 @@
+[build-system]
+requires = ["uv-build"]
+build-backend = "uv_build"
+
+[project]
+name = "nft-prefix-import"
+version = "0.1.0"
+description = "Populate nftables sets with prefixes for selected autonomous systems"
+authors = [
+    {name = "Martin Weinelt", email = "hexa@darmstadt.ccc.de"},
+]
+license = "EUPL-1.2"
+license-files = ["LICENSE"]
+readme = "README.md"
+requires-python = ">=3.10"
+dependencies = [
+    "httpx",
+    "typer",
+]
+
+[project.scripts]
+nft-prefix-import = "nft_prefix_import.__main__:cli"
+
+[tool.ruff.lint]
+extend-select = [
+    "I",   # isort
+    "ISC", # implicit string concat
+]
+
+[tool.ruff.lint.flake8-implicit-str-concat]
+allow-multiline = false
