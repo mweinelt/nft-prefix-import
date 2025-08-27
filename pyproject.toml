@@ -15,6 +15,7 @@ readme = "README.md"
 requires-python = ">=3.10"
 dependencies = [
     "httpx",
+    "more-itertools",
     "typer",
 ]
 

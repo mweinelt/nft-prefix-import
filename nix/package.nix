@@ -18,6 +18,7 @@ python3Packages.buildPythonApplication {
 
   dependencies = with python3Packages; [
     httpx
+    more-itertools
     typer
   ];
 
