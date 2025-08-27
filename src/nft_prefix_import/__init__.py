@@ -1,12 +1,15 @@
+import asyncio
 import sys
 import time
-from ipaddress import ip_network
+from ipaddress import IPv4Network, IPv6Network, ip_network
 from pathlib import Path
-from subprocess import CalledProcessError, run
 from typing import Final
 
 import httpx
 import typer
+from more_itertools import partition
+from pyroute2.netlink.nfnetlink.nftsocket import NFPROTO_INET
+from pyroute2.nftables.main import AsyncNFTables
 from typing_extensions import Annotated
 
 
@@ -39,27 +42,21 @@ def get_rttable(user_agent: str) -> str:
     return data
 
 
-def nft_block(prefixes: set[str], table: str, ipv4set: str, ipv6set: str) -> None:
+async def nft_add_prefixes(prefixes: set[str], table: str, ipv4set: str, ipv6set: str) -> bool:
     networks = map(ip_network, prefixes)
+    ipv4nets, ipv6nets = map(list, partition(lambda network: network.version == 4, networks))
 
-    for network in networks:
-        try:
-            run(
-                [
-                    "nft",
-                    "add",
-                    "element",
-                    "inet",
-                    table,
-                    ipv4set if network.version == 4 else ipv6set,
-                    "{",
-                    str(network),
-                    "}",
-                ],
-                check=True,
-            )
-        except CalledProcessError:
-            continue
+    async with AsyncNFTables(nfgen_family=NFPROTO_INET) as nft:
+        result = await nft.set_elems(
+            "add", table=table, set=ipv4set, elements=ipv4nets
+        )
+        print(result)
+        result = await nft.set_elems(
+            "add", table=table, set=ipv6set, elements=ipv6nets
+        )
+        print(result)
+
+    return True
 
 
 def main(
@@ -79,4 +76,6 @@ def main(
             continue
         if autnum in autnums:
             prefixes.add(prefix)
-    nft_block(prefixes, table, ipv4set, ipv6set)
+
+    success = asyncio.run(nft_add_prefixes(prefixes, table, ipv4set, ipv6set))
+    sys.exit(0 if success else 1)
