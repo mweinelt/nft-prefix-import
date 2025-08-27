@@ -1,0 +1,38 @@
+diff --git a/pyroute2/netlink/nfnetlink/nftsocket.py b/pyroute2/netlink/nfnetlink/nftsocket.py
+index 15fe0500..c097dc3d 100644
+--- a/pyroute2/netlink/nfnetlink/nftsocket.py
++++ b/pyroute2/netlink/nfnetlink/nftsocket.py
+@@ -1372,7 +1372,8 @@ class AsyncNFTSocket(AsyncNetlinkSocket):
+             # Only throw an error when the request fails. For now,
+             # do not return anything.
+         else:
+-            return self.request_get(msg, msg['header']['type'], flags)[0]
++            async for item in self.request_get(msg, msg['header']['type'], flags):
++                yield item
+ 
+ 
+ # call nft describe "data_type" for more informations
+diff --git a/pyroute2/nftables/main.py b/pyroute2/nftables/main.py
+index 283ef63e..0feaaef4 100644
+--- a/pyroute2/nftables/main.py
++++ b/pyroute2/nftables/main.py
+@@ -349,14 +349,12 @@ class AsyncNFTables(AsyncNFTSocket):
+         else:
+             nft_set = NFTSet(**kwarg)
+         kwarg = nft_set.as_netlink()
+-        msg = [
+-            x
+-            async for x in await self._command(
+-                nft_set_msg, commands, cmd, kwarg
+-            )
+-        ]
++        msg_list = [x async for x in await self._command(
++            nft_set_msg, commands, cmd, kwarg
++        )]
+         if cmd == "get":
+-            return NFTSet.from_netlink(msg)
++            # NFTSet expects a single Netlink message
++            return NFTSet.from_netlink(msg_list[0])
+         return nft_set
+ 
+     async def set_elems(self, cmd, **kwarg):

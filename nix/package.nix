@@ -19,7 +19,9 @@ python3Packages.buildPythonApplication {
   dependencies = with python3Packages; [
     httpx
     more-itertools
-    pyroute2
+    (pyroute2.overrideAttrs (oldAttrs: {
+      patches = oldAttrs.patches or [ ] ++ [ ./pyroute2-async-fix.patch ];
+    }))
     typer
   ];
 
