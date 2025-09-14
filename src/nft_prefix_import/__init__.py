@@ -1,10 +1,10 @@
 import sys
 import time
-from ipaddress import ip_network
+from ipaddress import IPv4Network, IPv6Network, ip_network
 from pathlib import Path
 from subprocess import CalledProcessError, run
 from traceback import print_exc
-from typing import Final
+from typing import Final, Iterable
 
 import httpx
 import typer
@@ -45,9 +45,9 @@ def nft_add_elements(
     prefixes: set[str], table: str, ipv4set: str, ipv6set: str
 ) -> None:
     networks = map(ip_network, prefixes)
-    ipv4nets, ipv6nets = partition(lambda ip: ip.version == 6, networks)
+    ipv4nets, ipv6nets = partition(lambda ip: isinstance(ip, IPv6Network), networks)
 
-    def add_elements(setname: str, elements: list[str]) -> None:
+    def add_elements(setname: str, elements: Iterable[IPv4Network | IPv6Network]) -> None:
         run(
             [
                 "nft",
@@ -60,8 +60,9 @@ def nft_add_elements(
                 ", ".join(map(str, elements)),
                 "}",
             ],
-            check=True
+            check=True,
         )
+
     try:
         add_elements(ipv4set, ipv4nets)
     except CalledProcessError:
@@ -93,6 +94,7 @@ def main(
         try:
             prefix, autnum = line.split()
         except ValueError:
+            print(f"Error parsing line: {line}", file=sys.stderr)
             continue
         if autnum in autnums:
             prefixes.add(prefix)
