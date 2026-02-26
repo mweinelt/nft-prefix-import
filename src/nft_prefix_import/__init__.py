@@ -46,7 +46,9 @@ def nft_add_elements(
     networks = map(ip_network, prefixes)
     ipv4nets, ipv6nets = partition(lambda ip: isinstance(ip, IPv6Network), networks)
 
-    def add_elements(setname: str, elements: Iterable[IPv4Network | IPv6Network]) -> None:
+    def add_elements(
+        setname: str, elements: Iterable[IPv4Network | IPv6Network]
+    ) -> None:
         run(
             [
                 "nft",
