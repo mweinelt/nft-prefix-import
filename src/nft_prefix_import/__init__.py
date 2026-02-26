@@ -4,12 +4,11 @@ from ipaddress import IPv4Network, IPv6Network, ip_network
 from pathlib import Path
 from subprocess import CalledProcessError, run
 from traceback import print_exc
-from typing import Final, Iterable
+from typing import Annotated, Final, Iterable
 
 import httpx
 import typer
 from more_itertools import partition
-from typing_extensions import Annotated
 
 
 def get_rttable(user_agent: str) -> str:
