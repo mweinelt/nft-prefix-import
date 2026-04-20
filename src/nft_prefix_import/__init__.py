@@ -49,18 +49,17 @@ def nft_add_elements(
     def add_elements(
         setname: str, elements: Iterable[IPv4Network | IPv6Network]
     ) -> None:
+        # Pass the ruleset via stdin instead of argv. Large ASNs can expand to
+        # tens of thousands of prefixes, which overflows the kernel's ARG_MAX
+        # limit and fails with "Argument list too long" when passed on the
+        # command line.
+        elems = ", ".join(map(str, elements))
+        if not elems:
+            return
         run(
-            [
-                "nft",
-                "add",
-                "element",
-                "inet",
-                table,
-                setname,
-                "{",
-                ", ".join(map(str, elements)),
-                "}",
-            ],
+            ["nft", "-f", "-"],
+            input=f"add element inet {table} {setname} {{ {elems} }}\n",
+            text=True,
             check=True,
         )
 
